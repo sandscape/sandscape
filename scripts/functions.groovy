@@ -4,11 +4,17 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.logging.Level
 import java.util.logging.Logger
+import org.apache.commons.lang.exception.ExceptionUtils
 
 //list of available bindings
+downloadFile = null
 getObjectValue = null
 isUrlGood = null
+sandscapeErrorLogger = null
+sandscapeLevelLogger = null
 sandscapeLogger = null
+sandscapePluginErrorLogger = null
+sandscapePluginLevelLogger = null
 sandscapePluginLogger = null
 
 /*
@@ -73,7 +79,7 @@ getObjectValue = { Map object, String key, Object defaultValue ->
     return defaultValue
 }
 
-isUrlGood = { url ->
+isUrlGood = { String url ->
     int code = -1
     try {
         code = new URL(url).openConnection().with {
@@ -88,10 +94,24 @@ isUrlGood = { url ->
         }
     }
     catch(MalformedURLException e) {
-        sandscapeErrorLogger(org.apache.commons.lang.exception.ExceptionUtils.getStackTrace(e))
+        sandscapeErrorLogger(ExceptionUtils.getStackTrace(e))
     }
     catch(Exception e) {}
     //2XX status is success - https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2
     //return true if HTTP 2XX status
     return ((int) code/100) == 2
+}
+
+downloadFile = { String url, String fullpath ->
+    try {
+        new File(fullpath).newOutputStream().with { file ->
+            file << new URL(url).openStream()
+            file.close()
+        }
+    }
+    catch(Exception e) {
+        sandscapeErrorLogger(ExceptionUtils.getStackTrace(e))
+        return false
+    }
+    return true
 }
