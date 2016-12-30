@@ -10,6 +10,7 @@ import org.apache.commons.lang.exception.ExceptionUtils
 downloadFile = null
 getObjectValue = null
 isUrlGood = null
+sandscapeErrorLevelLogger = null
 sandscapeErrorLogger = null
 sandscapeLevelLogger = null
 sandscapeLogger = null
@@ -28,17 +29,24 @@ sandscapeLevelLogger = { Level level, String message ->
     String now = DateFormat.getDateTimeInstance().format(new Date())
     logger.log(level, "${now} ${message}")
 }
+sandscapeErrorLevelLogger = { Level level, String message ->
+    String now = DateFormat.getDateTimeInstance().format(new Date())
+    "${now} ${message}".with {
+        println it
+        logger.log(level, it)
+    }
+}
 sandscapeLogger = { String message ->
     sandscapeLevelLogger(Level.INFO, message)
 }
 sandscapeErrorLogger = { String message ->
-    sandscapeLevelLogger(Level.SEVERE, message)
+    sandscapeErrorLevelLogger(Level.SEVERE, message)
 }
 sandscapePluginLogger = { Class clazz, String message ->
     sandscapeLevelLogger(Level.INFO, "[${clazz.simpleName} sandscape plugin] ${message}")
 }
 sandscapePluginErrorLogger = { Class clazz, String message ->
-    sandscapeLevelLogger(Level.SEVERE, "[${clazz.simpleName} sandscape plugin] ${message}")
+    sandscapeErrorLevelLogger(Level.SEVERE, "[${clazz.simpleName} sandscape plugin] ${message}")
 }
 sandscapePluginLevelLogger = { Class clazz, Level level, String message ->
     sandscapeLevelLogger(level, "[${clazz.simpleName} sandscape plugin] ${message}")
@@ -104,9 +112,15 @@ isUrlGood = { String url ->
 
 downloadFile = { String url, String fullpath ->
     try {
-        new File(fullpath).newOutputStream().with { file ->
-            file << new URL(url).openStream()
-            file.close()
+        new File(fullpath).with { file ->
+            //make parent directories if they don't exist
+            if(!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs()
+            }
+            file.newOutputStream().with { file_os ->
+                file_os << new URL(url).openStream()
+                file_os.close()
+            }
         }
     }
     catch(Exception e) {
