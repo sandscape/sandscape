@@ -1,0 +1,44 @@
+apply plugin: 'groovy'
+
+ext.groovyVersion = System.getenv('GROOVY_VERSION')?: '1.8.9'
+
+println "Using Groovy ${groovyVersion}"
+println "Using Gradle ${GradleVersion.current().getVersion()}"
+println "Using Java ${org.gradle.internal.jvm.Jvm.current()}"
+println "Building ${archivesBaseName}-${version}"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    testCompile 'junit:junit:4.12'
+}
+
+sourceSets.main.resources {
+    srcDirs = ['scripts']
+}
+
+test {
+    // show standard out and standard error of the test JVM(s) on the console
+    testLogging.showStandardStreams = true
+
+    // set heap size for the test JVM(s)
+    minHeapSize = '128m'
+    maxHeapSize = '512m'
+
+    //MaxPermSize was removed from Java 1.8
+    // set JVM arguments for the test JVM(s)
+    //jvmArgs '-XX:MaxPermSize=256m'
+
+    // listen to events in the test execution lifecycle
+    beforeTest { descriptor ->
+        logger.lifecycle('Running test: ' + descriptor)
+    }
+
+    // listen to standard out and standard error of the test JVM(s)
+    onOutput { descriptor, event ->
+        logger.lifecycle('Test: ' + descriptor + ' produced standard out/err: ' + event.message )
+    }
+}
