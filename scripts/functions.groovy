@@ -51,13 +51,13 @@ USAGE:
 
 For sandscape scripts,
 
-    sandscapeLogger("This is an informational message.")
-    sandscapeErrorLogger("A critical error has occurred.")
+    sandscapeLogger 'This is an informational message.'
+    sandscapeErrorLogger 'A critical error has occurred.'
 
 For sandscape plugins,
 
-    sandscapePluginLogger("This is an informational message.")
-    sandscapePluginErrorLogger("A critical error has occurred.")
+    sandscapePluginLogger 'This is an informational message.'
+    sandscapePluginErrorLogger 'A critical error has occurred.'
 */
 //sandscape logging mechanisms
 logger = Logger.getLogger('sandscape')
@@ -148,6 +148,50 @@ getObjectValue = { Map object, String key, Object defaultValue ->
     return defaultValue
 }
 
+/*
+Write to an object which was loaded from YAML or JSON files.
+
+USAGE:
+
+Write `3` (an Integer) to the second item in a list.
+
+    List someobject = ['a', 'b', 'c']
+    setObjectValue(someobject, '[1]', 3)
+    assert ['a', 3, 'c'] == someobject
+
+In the third item, write a Map key value pair.
+
+    setObjectValue(someobject, '[2].hello', 'world')
+    assert ['a', 3, ['hello':'world']] == someobject
+
+Write to a Map which contains a key whose contents is a list.  Write the same
+value to every item in the list.
+
+    Map someobject = ['rootkey': [1, 2, 3]]
+    setObjectValue(someobject, 'rootkey[*]', 'groovy')
+    assert ['rootkey': ['groovy', 'groovy', 'groovy']] == someobject
+
+Write to a nested Map.
+
+    Map someobject = ['people': [['name':'Jack'], ['name':'Jill']]]
+    setObjectValue(someobject, 'people[0].age', 15)
+    assert ['name': 'Jack', 'age': 15] == someobject['people'][0]
+
+PARAMETERS:
+
+* `object` - A `Map` or a `List` which was likely created from a YAML or JSON
+  file.
+* `key` - A `String` with keys and subkeys separated by periods which is used
+  as a path to write to the `object`.  The path may write to multiple locations
+  of the object depending on how it's defined.
+* `setValue` - An object which will be written to the path or paths defined by
+  `key`.
+
+RETURNS:
+
+Returns `true` if success, otherwise returns `false`.
+*/
+
 setObjectValue = { Object object, String key, Object setValue ->
     if(!(object instanceof Map) && !(object instanceof List)) {
         sandscapeErrorLogger("setObjectValue - object is not a Map or List.  ${object.class}")
@@ -193,15 +237,7 @@ setObjectValue = { Object object, String key, Object setValue ->
                         setObjectValue(nextObject[i], key2, setValue)
                     }
                     else {
-                        if(key2.isEmpty()) {
-                            nextObject[i] = setValue
-                        }
-                        else {
-                            if(!(nextObject[i] instanceof Map)) {
-                                nextObject[i] = [:]
-                            }
-                            nextObject[i][key1] = setValue
-                        }
+                        nextObject[i] = setValue
                     }
                 }
             }
@@ -230,15 +266,7 @@ setObjectValue = { Object object, String key, Object setValue ->
                     setObjectValue(nextObject[index], key2, setValue)
                 }
                 else {
-                    if(key1.isEmpty()) {
-                        nextObject[index] = setValue
-                    }
-                    else {
-                        if(!(nextObject instanceof Map)) {
-                            nextObject[index] = [:]
-                        }
-                        nextObject[index][key1] = setValue
-                    }
+                    nextObject[index] = setValue
                 }
             }
         }
@@ -247,8 +275,10 @@ setObjectValue = { Object object, String key, Object setValue ->
         }
     }
     catch(Exception e) {
+        sandscapeErrorLogger(ExceptionUtils.getStackTrace(e))
+        return false
     }
-    null
+    return true
 }
 
 /*
@@ -257,7 +287,7 @@ method of the HTTP protocol.
 
 USAGE:
 
-isUrlGood("http://example.com")
+    isUrlGood 'http://example.com'
 
 PARAMETERS:
 
@@ -298,7 +328,7 @@ are missing then they are automatically created (similar to the Linux command
 
 USAGE:
 
-    downloadFile("http://example.com", "/tmp/foo/index.html").
+    downloadFile('http://example.com', '/tmp/foo/index.html')
 
 PARAMETERS:
 

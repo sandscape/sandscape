@@ -31,7 +31,7 @@ class functionsTest extends GroovyTestCase {
         assert 'default' == binding.getObjectValue.call(example, 'key1', 'default')
         assert 'default' == binding.getObjectValue.call(example, 'key2', 'default')
     }
-    @Test public void test_functions_setObjectValue_maplist() {
+    @Test public void test_functions_setObjectValue_maplistmap() {
         Map example = ['somekey':[[:],[:]]]
         assert [:] == example['somekey'][1]
         binding.setObjectValue.call(example, 'somekey[1].foo', 'hello')
@@ -47,5 +47,10 @@ class functionsTest extends GroovyTestCase {
         List example = ['',['somekey':[[:],[:]]]]
         binding.setObjectValue.call(example, '[*].somekey', 'hello')
         assert [['somekey':'hello'], ['somekey':'hello']] == example
+    }
+    @Test public void test_functions_setObjectValue_list_maplist() {
+        Map someobject = ['rootkey': [1, 2, 3]]
+        binding.setObjectValue.call(someobject, 'rootkey[*]', 'groovy')
+        assert ['rootkey': ['groovy', 'groovy', 'groovy']] == someobject
     }
 }
