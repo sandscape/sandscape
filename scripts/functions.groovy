@@ -64,6 +64,11 @@ Get an object from a `Map` or return any object from `defaultValue`.
 Guarantees that what is returned is the same type as `defaultValue`.  This is
 used to get optional keys from YAML or JSON files.
 
+USAGE:
+
+    Map example = [key1: [subkey1: 'string']]
+    getObjectValue(example, 'key1.subkey1', 'some default')
+
 PARAMETERS:
 
 * `object` - A `Map` which was likely created from a YAML or JSON file.
