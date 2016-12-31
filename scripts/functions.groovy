@@ -127,24 +127,51 @@ getObjectValue = { Map object, String key, Object defaultValue ->
     return defaultValue
 }
 
-setObjectValue = { Map object, String key, Object setValue ->
-    println object
+setObjectValue = { Object object, String key, Object setValue ->
+    if(!(object instanceof Map) && !(object instanceof List)) {
+        sandscapeErrorLogger("setObjectValue - object is not a Map or List.  ${object.class}")
+        return
+    }
     try {
         if(key.indexOf('.') >= 0) {
             String key1 = key.split('\\.', 2)[0]
             String key2 = key.split('\\.', 2)[1]
+            //nextKey is used later to detect of a List (empty) or a Map.
+            Boolean nextKey = (key2.split('\\.', 2)[0] - ~/\[(-?[0-9]*\*?)\]$/)
             //check for a list i.e. somekey[1]
-            if(key1.matches(/.*\[-?[0-9]*\*{0,1}\]$/)) {
+            if(key1.matches(/.*\[-?[0-9]*\*?\]$/)) {
                 def index
-                (key1 =~ /(.*)\[(-?[0-9]*\*{0,1})\]$/)[0].with {
+                (key1 =~ /(.*)\[(-?[0-9]*\*?)\]$/)[0].with {
                     key1 = it[1]
                     index = it[2]
                 }
+                Object nextObject = null
                 if(index == '*') {
+                    nextObject = (key1.isEmpty())? object : object[key1]
                 }
                 else {
                     index = index.toInteger()
-                    setObjectValue(object[key1][index.toInteger()], key2, setValue)
+                    if(key1.isEmpty()) {
+                        //since key1 is empty then it must be interpreted as a list
+                        nextObject = object[index.toInteger()]
+                    }
+                    else {
+                        nextObject = object[key1][index.toInteger()]
+                    }
+                    //force the next key to be a Map or List
+                    if(nextKey.isEmpty()) {
+                        //next key is a List
+                        if(!(nextObject instanceof List)) {
+                            nextObject = []
+                        }
+                    }
+                    else {
+                        //next key is a Map
+                        if(!(nextObject instanceof Map)) {
+                            nextObject = [:]
+                        }
+                    }
+                    setObjectValue(nextObject, key2, setValue)
                     return
                 }
             }
