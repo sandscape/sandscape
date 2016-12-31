@@ -60,7 +60,17 @@ class functionsTest extends GroovyTestCase {
     }
     @Test public void test_functions_setObjectValue_list_createmap() {
         List someobject = ['a', 'b', 'c']
-        setObjectValue(someobject, '[2].hello', 'world')
+        binding.setObjectValue.call(someobject, '[2].hello', 'world')
         assert ['a', 'b', ['hello':'world']] == someobject
+    }
+    @Test public void test_functions_setObjectValue_map_faillist() {
+        List someobject = ['a', 'b', 'c']
+        binding.setObjectValue.call(someobject, 'hello.[2]', 'world')
+        assert ['a', 'b', 'c'] == someobject
+    }
+    @Test public void test_functions_setObjectValue_list_failmap() {
+        Map someobject = ['hello':'world']
+        binding.setObjectValue.call(someobject, '[0].hello', 'world')
+        assert ['hello':'world'] == someobject
     }
 }

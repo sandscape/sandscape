@@ -198,6 +198,14 @@ setObjectValue = { Object object, String key, Object setValue ->
         sandscapeErrorLogger("setObjectValue - object is not a Map or List.  ${object.class}")
         return
     }
+    if(key.startsWith('[') && !(object instanceof List)) {
+        sandscapeErrorLogger("setObjectValue - `object` is not List but `key` defines it as a List.")
+        return
+    }
+    if(!key.startsWith('[') && !(object instanceof Map)) {
+        sandscapeErrorLogger("setObjectValue - `object` is not Map but `key` defines it as a Map.")
+        return
+    }
     try {
         String key1, key2, nextKey
         key1 = key2 = nextKey = null
