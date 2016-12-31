@@ -161,8 +161,9 @@ Write `3` (an Integer) to the second item in a list.
 
 In the third item, write a Map key value pair.
 
+    List someobject = ['a', 'b', 'c']
     setObjectValue(someobject, '[2].hello', 'world')
-    assert ['a', 3, ['hello':'world']] == someobject
+    assert ['a', 'b', ['hello':'world']] == someobject
 
 Write to a Map which contains a key whose contents is a list.  Write the same
 value to every item in the list.
