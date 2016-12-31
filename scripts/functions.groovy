@@ -6,10 +6,14 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import org.apache.commons.lang.exception.ExceptionUtils
 
-//list of available bindings
+/*
+   Define available bindings.  The bindings had to be listed first in order for
+   recursion to work within closures.
+*/
 downloadFile = null
 getObjectValue = null
 isUrlGood = null
+logger = null
 sandscapeErrorLevelLogger = null
 sandscapeErrorLogger = null
 sandscapeLevelLogger = null
@@ -19,40 +23,70 @@ sandscapePluginLevelLogger = null
 sandscapePluginLogger = null
 
 /*
-   Define the bindings as functions.  The bindings had to be listed first in
-   order for recursion to work within closures.
-*/
+Sandscape logging mechanisms which are used by scripts and Sandscape plugins.
 
+USAGE:
+
+For sandscape scripts,
+
+    sandscapeLogger("This is an informational message.")
+    sandscapeErrorLogger("A critical error has occurred.")
+
+For sandscape plugins,
+
+    sandscapePluginLogger("This is an informational message.")
+    sandscapePluginErrorLogger("A critical error has occurred.")
+*/
 //sandscape logging mechanisms
 logger = Logger.getLogger('sandscape')
 sandscapeLevelLogger = { Level level, String message ->
     String now = DateFormat.getDateTimeInstance().format(new Date())
-    logger.log(level, "${now} ${message}")
-}
-sandscapeErrorLevelLogger = { Level level, String message ->
-    String now = DateFormat.getDateTimeInstance().format(new Date())
     "${now} ${message}".with {
-        println it
+        if(level == Level.SEVERE) {
+            println it
+        }
         logger.log(level, it)
     }
 }
-sandscapeLogger = { String message ->
-    sandscapeLevelLogger(Level.INFO, message)
+sandscapePluginLevelLogger = {Level level, String message ->
+    //get the class name of the class which called this function
+    String callerClass = Thread.currentThread().getStackTrace().findAll { it.getFileName() && it.getFileName().endsWith('.groovy') }[1].with { it = it.getFileName() - '.groovy' }
+    sandscapeLevelLogger(level, "[${callerClass} sandscape plugin] ${message}")
 }
-sandscapeErrorLogger = { String message ->
-    sandscapeErrorLevelLogger(Level.SEVERE, message)
-}
-sandscapePluginLogger = { Class clazz, String message ->
-    sandscapeLevelLogger(Level.INFO, "[${clazz.simpleName} sandscape plugin] ${message}")
-}
-sandscapePluginErrorLogger = { Class clazz, String message ->
-    sandscapeErrorLevelLogger(Level.SEVERE, "[${clazz.simpleName} sandscape plugin] ${message}")
-}
-sandscapePluginLevelLogger = { Class clazz, Level level, String message ->
-    sandscapeLevelLogger(level, "[${clazz.simpleName} sandscape plugin] ${message}")
-}
+//http://groovy-lang.org/closures.html#_left_currying
+sandscapeErrorLogger = sandscapeLevelLogger.curry(Level.SEVERE)
+sandscapeLogger = sandscapeLevelLogger.curry(Level.INFO)
+sandscapePluginErrorLogger = sandscapePluginLevelLogger.curry(Level.SEVERE)
+sandscapePluginLogger = sandscapePluginLevelLogger.curry(Level.INFO)
 
-//a function for easily traversing objects
+/*
+Get an object from a `Map` or return any object from `defaultValue`.
+Guarantees that what is returned is the same type as `defaultValue`.  This is
+used to get optional keys from YAML or JSON files.
+
+PARAMETERS:
+
+* `object` - A `Map` which was likely created from a YAML or JSON file.
+* `key` - A `String` with keys and subkeys separated by periods which is used
+  to search the `object` for a possible value.
+* `defaultValue` - A default value and type that should be returned.
+
+RETURNS:
+
+Returns the value of the key or a `defaultValue` which is of the same type as
+`defaultValue`.  This function has coercion behaviors which are not the same as
+Groovy:
+
+* If the `defaultValue` is an instance of `String` and the retrieved key is an
+  instance of `Map`, then `defaultValue` is returned rather than converting it
+  to a `String`.
+* If the `defaultValue` is an instance of `String` and the retrieved key is an
+  instance of `List`, then `defaultValue` is returned rather than converting it
+  to a `String`.
+* If the `defaultValue` is an instance of `Boolean`, the retrieved key is an
+  instance of `String` and has a value of `false`, then `Boolean false` is
+  returned.
+*/
 getObjectValue = { Map object, String key, Object defaultValue ->
     if(key.indexOf('.') >= 0) {
         String key1 = key.split('\\.', 2)[0]
@@ -87,6 +121,23 @@ getObjectValue = { Map object, String key, Object defaultValue ->
     return defaultValue
 }
 
+/*
+    This function tests the health of a URL HTTP status by calling the HTTP HEAD
+    method of the HTTP protocol.
+
+    USAGE:
+
+
+
+    PARAMETERS:
+
+    * `url` - A `String` which is the URL of a website.
+
+    RETURNS:
+
+    A `Boolean`, `true` if the website returns an HTTP 2XX status code and
+    `false` otherwise.
+*/
 isUrlGood = { String url ->
     int code = -1
     try {
@@ -110,6 +161,10 @@ isUrlGood = { String url ->
     return ((int) code/100) == 2
 }
 
+/*
+   Download a file to a local `fullpath`.  If the parent directories of the
+   path are missing then they are automatically created.
+*/
 downloadFile = { String url, String fullpath ->
     try {
         new File(fullpath).with { file ->
