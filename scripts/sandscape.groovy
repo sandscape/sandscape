@@ -19,12 +19,25 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+
 import jenkins.model.Jenkins
 
 Jenkins jenkins = Jenkins.instance
 
-if(jenkins.isQuietingDown()) {
-    println "Shutdown mode enabled.  Sandscape will not configure Jenkins."
+//make available functions for Sandscape and Sandscape plugins via Groovy bindings
+evaluate(new File(jenkins.root.toString() + "/sandscape/functions.groovy")
+
+def isShutdownModeEnabled() {
+    if(jenkins.isQuietingDown()) {
+        println 'Shutdown mode enabled.  Sandscape will not configure Jenkins.'
+        sandscapeLogger 'Shutdown mode enabled.  Sandscape will not configure Jenkins.'
+    }
+    jenkins.isQuietingDown()
+}
+
+//abort script because shutdown mode is enabled
+if(isShutdownModeEnabled) {
     return
 }
 
+//load the user config.json and secrets.json
