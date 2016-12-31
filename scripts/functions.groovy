@@ -122,21 +122,21 @@ getObjectValue = { Map object, String key, Object defaultValue ->
 }
 
 /*
-    This function tests the health of a URL HTTP status by calling the HTTP HEAD
-    method of the HTTP protocol.
+This function tests the health of a URL HTTP status by calling the HTTP HEAD
+method of the HTTP protocol.
 
-    USAGE:
+USAGE:
 
+isUrlGood("http://example.com")
 
+PARAMETERS:
 
-    PARAMETERS:
+* `url` - A `String` which is the URL of a website.
 
-    * `url` - A `String` which is the URL of a website.
+RETURNS:
 
-    RETURNS:
-
-    A `Boolean`, `true` if the website returns an HTTP 2XX status code and
-    `false` otherwise.
+A `Boolean`, `true` if the website returns an HTTP 2XX status code and `false`
+otherwise.
 */
 isUrlGood = { String url ->
     int code = -1
@@ -158,12 +158,27 @@ isUrlGood = { String url ->
     catch(Exception e) {}
     //2XX status is success - https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2
     //return true if HTTP 2XX status
-    return ((int) code/100) == 2
+    return ((int) code / 100) == 2
 }
 
 /*
-   Download a file to a local `fullpath`.  If the parent directories of the
-   path are missing then they are automatically created.
+Download a file to a local `fullpath`.  If the parent directories of the path
+are missing then they are automatically created (similar to the Linux command
+`mkdir -p`).
+
+USAGE:
+
+    downloadFile("http://example.com", "/tmp/foo/index.html").
+
+PARAMETERS:
+
+* `url` - A `String` which is a URL to a file on a website.
+* `fullpath` - A `String` which is a full file path.  It is the destination of
+  the downloaded file.
+
+RETURNS:
+
+A `Bolean`, `true` if downloading the file was a success or `false` if not.
 */
 downloadFile = { String url, String fullpath ->
     try {
