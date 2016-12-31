@@ -73,4 +73,9 @@ class functionsTest extends GroovyTestCase {
         binding.setObjectValue.call(someobject, '[0].hello', 'world')
         assert ['hello':'world'] == someobject
     }
+    @Test public void test_functions_setObjectValue_list_nestedmap() {
+        Map someobject = ['people': [['name':'Jack'], ['name':'Jill']]]
+        binding.setObjectValue.call(someobject, 'people[0].age', 15)
+        assert ['name': 'Jack', 'age': 15] == someobject['people'][0]
+    }
 }
