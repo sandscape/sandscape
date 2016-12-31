@@ -21,6 +21,7 @@ sandscapeLogger = null
 sandscapePluginErrorLogger = null
 sandscapePluginLevelLogger = null
 sandscapePluginLogger = null
+setObjectValue = null
 
 /*
 Sandscape logging mechanisms which are used by scripts and Sandscape plugins.
@@ -124,6 +125,34 @@ getObjectValue = { Map object, String key, Object defaultValue ->
 
     //nothing worked so just return default value
     return defaultValue
+}
+
+setObjectValue = { Map object, String key, Object setValue ->
+    println object
+    try {
+        if(key.indexOf('.') >= 0) {
+            String key1 = key.split('\\.', 2)[0]
+            String key2 = key.split('\\.', 2)[1]
+            //check for a list i.e. somekey[1]
+            if(key1.matches(/.*\[-?[0-9]*\*{0,1}\]$/)) {
+                def index
+                (key1 =~ /(.*)\[(-?[0-9]*\*{0,1})\]$/)[0].with {
+                    key1 = it[1]
+                    index = it[2]
+                }
+                if(index == '*') {
+                }
+                else {
+                    index = index.toInteger()
+                    setObjectValue(object[key1][index.toInteger()], key2, setValue)
+                    return
+                }
+            }
+        }
+        object[key] = setValue
+    }
+    catch(Exception e) {
+    }
 }
 
 /*
