@@ -133,53 +133,95 @@ setObjectValue = { Object object, String key, Object setValue ->
         return
     }
     try {
+        String key1, key2, nextKey
+        key1 = key2 = nextKey = null
         if(key.indexOf('.') >= 0) {
-            String key1 = key.split('\\.', 2)[0]
-            String key2 = key.split('\\.', 2)[1]
+            key1 = key.split('\\.', 2)[0]
+            key2 = key.split('\\.', 2)[1]
             //nextKey is used later to detect of a List (empty) or a Map.
-            Boolean nextKey = (key2.split('\\.', 2)[0] - ~/\[(-?[0-9]*\*?)\]$/)
+            nextKey = (key2.split('\\.', 2)[0] - ~/\[(-?[0-9]*\*?)\]$/)
             //check for a list i.e. somekey[1]
             if(key1.matches(/.*\[-?[0-9]*\*?\]$/)) {
                 def index
+                Object nextObject = null
                 (key1 =~ /(.*)\[(-?[0-9]*\*?)\]$/)[0].with {
                     key1 = it[1]
                     index = it[2]
                 }
-                Object nextObject = null
                 if(index == '*') {
+                    //if key1 is empty then treat it as a List else a Map
                     nextObject = (key1.isEmpty())? object : object[key1]
+                    nextObject.each { item ->
+                        if(nextKey.isEmpty() && !(item instanceof List)) {
+                            item = []
+                        }
+                        else if(!(item instanceof Map)) {
+                            item = [:]
+                        }
+                        setObjectValue(item, key2, setValue)
+                    }
                 }
                 else {
                     index = index.toInteger()
-                    if(key1.isEmpty()) {
-                        //since key1 is empty then it must be interpreted as a list
-                        nextObject = object[index.toInteger()]
-                    }
-                    else {
-                        nextObject = object[key1][index.toInteger()]
-                    }
+                    //if key1 is empty then treat it as a List else a Map
+                    nextObject = (key1.isEmpty())? object[index] : object[key1][index]
                     //force the next key to be a Map or List
-                    if(nextKey.isEmpty()) {
-                        //next key is a List
-                        if(!(nextObject instanceof List)) {
-                            nextObject = []
-                        }
+                    if(nextKey.isEmpty() && !(nextObject instanceof List)) {
+                        nextObject = []
                     }
-                    else {
-                        //next key is a Map
-                        if(!(nextObject instanceof Map)) {
-                            nextObject = [:]
-                        }
+                    else if(!(nextObject instanceof Map)) {
+                        nextObject = [:]
                     }
                     setObjectValue(nextObject, key2, setValue)
-                    return
                 }
             }
+            //TODO write else for key1 == 'somekey' as opposed to 'somekey[1]'
         }
-        object[key] = setValue
+        else {
+            //end of the list
+            if(key1.matches(/.*\[-?[0-9]*\*?\]$/)) {
+                //TODO what if the last item matches this block but is not a Map?
+                def index
+                Object nextObject = null
+                (key1 =~ /(.*)\[(-?[0-9]*\*?)\]$/)[0].with {
+                    key1 = it[1]
+                    index = it[2]
+                }
+                if(index == '*') {
+                    //if key1 is empty then treat it as a List else a Map
+                    nextObject = (key1.isEmpty())? object : object[key1]
+                    nextObject.each { item ->
+                        if(nextKey.isEmpty() && !(nextObject instanceof List)) {
+                            item = []
+                        }
+                        else if(!(nextObject instanceof Map)) {
+                            item = [:]
+                        }
+                        setObjectValue(item, key2, setValue)
+                    }
+                }
+                else {
+                    index = index.toInteger()
+                    //if key1 is empty then treat it as a List else a Map
+                    nextObject = (key1.isEmpty())? object[index] : object[key1][index]
+                    //force the next key to be a Map or List
+                    if(nextKey.isEmpty() && !(nextObject instanceof List)) {
+                        nextObject = []
+                    }
+                    else if(!(nextObject instanceof Map)) {
+                        nextObject = [:]
+                    }
+                    setObjectValue(nextObject, key2, setValue)
+                }
+            }
+            else {
+                object[key] = setValue
+            }
+        }
     }
     catch(Exception e) {
     }
+    null
 }
 
 /*
