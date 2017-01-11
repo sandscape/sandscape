@@ -25,6 +25,7 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.logging.Level
 import java.util.logging.Logger
+import java.util.regex.Matcher
 import org.apache.commons.lang.exception.ExceptionUtils
 
 /*
@@ -35,6 +36,7 @@ downloadFile = null
 getObjectValue = null
 isUrlGood = null
 logger = null
+resolvePluginUrl = null
 sandscapeErrorLevelLogger = null
 sandscapeErrorLogger = null
 sandscapeLevelLogger = null
@@ -367,4 +369,60 @@ downloadFile = { String url, String fullpath ->
         return false
     }
     return true
+}
+
+/*
+Resolve the URL to a plugin based on a possibly advanced mirror URL combined
+with a possibly advanced plugin string.  An advanced mirror URL contains a
+version `#{string}` in it where the default value is the `string` inside.  An
+advanced plugin string will look something like `plugin@version`.   If the
+plugin string does not contain an `@` symbol then a default value is assumed
+from the advanced mirror URL.
+
+USAGE:
+
+    resolvePluginUrl('https://example.com/plugins/#{master}', 'core-anonymous-usage-stats')
+    resolvePluginUrl('https://raw.githubusercontent.com/sandscape/plugins/#{master}/plugins', 'core-anonymous-usage-stats@v0.1')
+    resolvePluginUrl('https://raw.githubusercontent.com/sandscape/plugins/master/plugins', 'core-anonymous-usage-stats')
+
+The following will return a falsey empty string because of incompatible
+options.  You can't have an advanced plugin string but not an advanced mirror
+URL.
+
+    resolvePluginUrl('https://raw.githubusercontent.com/sandscape/plugins/master/plugins', 'core-anonymous-usage-stats@v0.1')
+
+RETURNS:
+
+A `String`, of the plugin URL which can be tested.  If a URL can't be
+determined then an empty string will be returned which is typically evaluated
+falsey in Groovy.
+*/
+
+resolvePluginUrl = { String mirrorUrl, String pluginString ->
+    mirrorUrl = mirrorUrl.replaceAll('/$', '')
+    Matcher m = mirrorUrl =~ /^([^#]*)#\{([^}]+)\}(.*)$/
+    Matcher p = pluginString =~ /^([^@]+)@(.+)$/
+
+    if(p.matches() && !m.matches()) {
+        //Skip this mirror due to incompatible options
+        return ''
+    }
+
+    String finalMirrorUrl = mirrorUrl
+    String mirrorUrlHead
+    String mirrorUrlTail
+    String pluginName = p.matches()? p[0][1] : pluginString
+    String pluginVersion
+
+    if(m.matches()) {
+        mirrorUrlHead = m[0][1]
+        //if plugin version defined use it; else fall back to default #{string}
+        pluginVersion = p.matches()? p[0][2] : m[0][2]
+        mirrorUrlTail = m[0][3]
+        finalMirrorUrl = mirrorUrlHead + pluginVersion + mirrorUrlTail + "/${pluginName}.groovy"
+    }
+    else {
+        finalMirrorUrl += "/${pluginName}.groovy"
+    }
+    return finalMirrorUrl
 }

@@ -78,4 +78,21 @@ class functionsTest extends GroovyTestCase {
         binding.setObjectValue.call(someobject, 'people[0].age', 15)
         assert ['name': 'Jack', 'age': 15] == someobject['people'][0]
     }
+    @Test public void test_functions_resolvePluginUrl_trailing_slash() {
+        assert 'https://foo/bar.groovy' == binding.resolvePluginUrl.call('https://foo/', 'bar')
+    }
+    @Test public void test_functions_resolvePluginUrl_mirror_plugin() {
+        assert 'https://foo/bar.groovy' == binding.resolvePluginUrl.call('https://foo', 'bar')
+    }
+    @Test public void test_functions_resolvePluginUrl_mirror_advanced_plugin() {
+        assert '' == binding.resolvePluginUrl.call('https://foo', 'bar@v1')
+    }
+    @Test public void test_functions_resolvePluginUrl_advanced_mirror_plugin() {
+        assert 'https://foo/baz/bar.groovy' == binding.resolvePluginUrl.call('https://foo/#{baz}', 'bar')
+        assert 'https://foo/baz/a/bar.groovy' == binding.resolvePluginUrl.call('https://foo/#{baz}/a', 'bar')
+    }
+    @Test public void test_functions_resolvePluginUrl_advanced_mirror_advanced_plugin() {
+        assert 'https://foo/v1/bar.groovy' == binding.resolvePluginUrl.call('https://foo/#{baz}', 'bar@v1')
+        assert 'https://foo/v1/a/bar.groovy' == binding.resolvePluginUrl.call('https://foo/#{baz}/a', 'bar@v1')
+    }
 }
