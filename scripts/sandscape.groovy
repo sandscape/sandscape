@@ -43,7 +43,29 @@ if('secrets' in sandscape_config) {
         sandscapeErrorLogger 'ERROR: sandscape secrets file defined but does not exist.  Skipping sandscape configuration.'
         return
     }
+    //TODO finish applying secrets
 }
+
+/* TODO set up custom script binding for each plugin separately.
+
+evaluate(new File('/home/sam/git/github/sandscape/sandscape/scripts/functions.groovy'))
+Binding globalPluginBinding = new Binding()
+binding.variables.each { k, v ->
+    println "Setting ${k}"
+    globalPluginBinding.setProperty(k, v)
+}
+Binding pluginBinding = new Binding()
+globalPluginBinding.variables.each { k, v ->
+    pluginBinding.setProperty(k, v)
+}
+println isUrlGood("http://example.com/")
+isUrlGood = 'switched'
+println isUrlGood
+GroovyShell groovy = new GroovyShell(Jenkins.getActiveInstance().getPluginManager().uberClassLoader, pluginBinding)
+Script script = groovy.parse('println isUrlGood("http://example.com/")')
+script.run()
+
+*/
 
 /*
 Copyright (c) 2016 Sam Gleske - https://github.com/sandscape
