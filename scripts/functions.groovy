@@ -1,24 +1,3 @@
-/*
-Copyright (c) 2016 Sam Gleske - https://github.com/sandscape
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
 //functions used by sandscape.groovy and Sandscape plugins
 
 import java.text.DateFormat
@@ -37,7 +16,6 @@ getObjectValue = null
 isUrlGood = null
 logger = null
 resolvePluginUrl = null
-sandscapeErrorLevelLogger = null
 sandscapeErrorLogger = null
 sandscapeLevelLogger = null
 sandscapeLogger = null
@@ -45,6 +23,7 @@ sandscapePluginErrorLogger = null
 sandscapePluginLevelLogger = null
 sandscapePluginLogger = null
 setObjectValue = null
+callFunctionForSetting = null
 
 /*
 Sandscape logging mechanisms which are used by scripts and Sandscape plugins.
@@ -372,6 +351,34 @@ downloadFile = { String url, String fullpath ->
 }
 
 /*
+Call a function for a setting.  For example, if there is a plugin setting named
+`my-custom-setting` then a method should be defined for manipulating that
+setting named `configureMyCustomSetting()`.
+
+USAGE:
+
+    callFunctionForSetting 'some-setting-for-plugin'
+
+PARAMETERS:
+
+* `setting` - A `String` which is a setting for a plugin configuration.
+
+RETURNS:
+
+A `Bolean`, `true` if setting configuration was a success or `false` if not.
+*/
+callFunctionForSetting = { String setting ->
+    if(!setting.matches(/^[-a-z]+$/)) {
+        sandscapePluginErrorLogger "Setting must only contain lowercase letters and hyphens: ${setting}"
+        return false
+    }
+
+    //call the function and return result as a boolean
+    "configure${setting.split('-')*.capitalize().join('')}"() as Boolean
+}
+
+
+/*
 Resolve the URL to a plugin based on a possibly advanced mirror URL combined
 with a possibly advanced plugin string.  An advanced mirror URL contains a
 version `#{string}` in it where the default value is the `string` inside.  An
@@ -426,3 +433,25 @@ resolvePluginUrl = { String mirrorUrl, String pluginString ->
     }
     return finalMirrorUrl
 }
+
+/*
+Copyright (c) 2016 Sam Gleske - https://github.com/sandscape
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
