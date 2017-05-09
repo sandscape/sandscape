@@ -11,6 +11,7 @@ import org.apache.commons.lang.exception.ExceptionUtils
    Define available bindings.  The bindings had to be listed first in order for
    recursion to work within closures.
 */
+callFunctionForSetting = null
 downloadFile = null
 getObjectValue = null
 isUrlGood = null
@@ -23,9 +24,9 @@ sandscapePluginErrorLogger = null
 sandscapePluginLevelLogger = null
 sandscapePluginLogger = null
 setObjectValue = null
-callFunctionForSetting = null
+sha256sum = null
 
-/*
+/**
 Sandscape logging mechanisms which are used by scripts and Sandscape plugins.
 
 USAGE:
@@ -62,7 +63,7 @@ sandscapeLogger = sandscapeLevelLogger.curry(Level.INFO)
 sandscapePluginErrorLogger = sandscapePluginLevelLogger.curry(Level.SEVERE)
 sandscapePluginLogger = sandscapePluginLevelLogger.curry(Level.INFO)
 
-/*
+/**
 Get an object from a `Map` or return any object from `defaultValue`.
 Guarantees that what is returned is the same type as `defaultValue`.  This is
 used to get optional keys from YAML or JSON files.
@@ -129,7 +130,7 @@ getObjectValue = { Map object, String key, Object defaultValue ->
     return defaultValue
 }
 
-/*
+/**
 Write to an object which was loaded from YAML or JSON files.
 
 USAGE:
@@ -271,7 +272,7 @@ setObjectValue = { Object object, String key, Object setValue ->
     return true
 }
 
-/*
+/**
 This function tests the health of a URL HTTP status by calling the HTTP HEAD
 method of the HTTP protocol.
 
@@ -311,7 +312,7 @@ isUrlGood = { String url ->
     return ((int) code / 100) == 2
 }
 
-/*
+/**
 Download a file to a local `fullpath`.  If the parent directories of the path
 are missing then they are automatically created (similar to the Linux command
 `mkdir -p`).
@@ -350,7 +351,7 @@ downloadFile = { String url, String fullpath ->
     return true
 }
 
-/*
+/**
 Call a function for a setting.  For example, if there is a plugin setting named
 `my-custom-setting` then a method should be defined for manipulating that
 setting named `configureMyCustomSetting()`.
@@ -378,7 +379,7 @@ callFunctionForSetting = { String setting ->
 }
 
 
-/*
+/**
 Resolve the URL to a plugin based on a possibly advanced mirror URL combined
 with a possibly advanced plugin string.  An advanced mirror URL contains a
 version `#{string}` in it where the default value is the `string` inside.  An
@@ -432,6 +433,24 @@ resolvePluginUrl = { String mirrorUrl, String pluginString ->
         finalMirrorUrl += "/${pluginName}.groovy"
     }
     return finalMirrorUrl
+}
+
+/**
+Calculate the SHA-256 hash of an object.
+
+USAGE:
+
+    sha256sum('some string')
+    sha256sum(new File('path-to-file'))
+
+RETURNS:
+
+A `String`, which is the SHA-256 hex digest of the object passed.
+*/
+sha256sum = { input ->
+    def digest = java.security.MessageDigest.getInstance("SHA-256")
+    digest.update( input.bytes )
+    new BigInteger(1,digest.digest()).toString(16).padLeft(64, '0')
 }
 
 /*
