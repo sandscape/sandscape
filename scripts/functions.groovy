@@ -1,5 +1,6 @@
 //functions used by sandscape.groovy and Sandscape plugins
 
+import java.security.MessageDigest
 import java.text.DateFormat
 import java.util.Date
 import java.util.logging.Level
@@ -448,9 +449,7 @@ RETURNS:
 A `String`, which is the SHA-256 hex digest of the object passed.
 */
 sha256sum = { input ->
-    def digest = java.security.MessageDigest.getInstance("SHA-256")
-    digest.update( input.bytes )
-    new BigInteger(1,digest.digest()).toString(16).padLeft(64, '0')
+    MessageDigest.getInstance('SHA-256').digest(input.bytes).encodeHex().toString()
 }
 
 /*
