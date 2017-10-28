@@ -95,4 +95,17 @@ class functionsTest extends GroovyTestCase {
         assert 'https://foo/v1/bar.groovy' == binding.resolvePluginUrl.call('https://foo/#{baz}', 'bar@v1')
         assert 'https://foo/v1/a/bar.groovy' == binding.resolvePluginUrl.call('https://foo/#{baz}/a', 'bar@v1')
     }
+    @Test public void test_functions_sha256sum_string() {
+        assert 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9' == binding.sha256sum.call('hello world')
+    }
+    @Test public void test_functions_sha256sum_file() {
+        URL url = this.getClass().getResource('/file.txt')
+        File.createTempFile('/tmp', '.txt').with { f ->
+            f.deleteOnExit()
+            f.withWriter() {
+                it.write(url.content.text)
+            }
+            assert 'b732eb0f7feeb0ae7b67280841d81dc23822081131516335ae134e3a21efbb60' == binding.sha256sum.call(f)
+        }
+    }
 }
