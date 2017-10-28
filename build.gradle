@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    compile 'commons-lang:commons-lang:2.6'
     testCompile 'junit:junit:4.12'
     testCompile 'commons-lang:commons-lang:2.6'
 }
@@ -30,4 +31,10 @@ test {
     beforeTest { descriptor ->
         logger.lifecycle('Running test: ' + descriptor)
     }
+}
+
+//http://swalsh.org/blog/2014/07/17/running-the-groovy-console-from-gradle/
+task( console, dependsOn: "classes", type: JavaExec ) {
+    main = "groovy.ui.Console"
+    classpath = sourceSets.main.runtimeClasspath
 }
